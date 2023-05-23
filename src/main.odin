@@ -13,10 +13,10 @@ Lang :: struct {
 
 main :: proc() {
 	root_dir: string
-
+	
 	// root directory is current directory coz it's simple
 	root_dir = os.get_current_directory()
-
+	
 	fd, err := os.open(root_dir)
 	if err != os.ERROR_NONE {
 		fmt.eprint("Failed to open root error.")
@@ -24,32 +24,19 @@ main :: proc() {
 	}
 	defer os.close(fd)
 
+	init_gitignore()
+	
 	langs := make([dynamic]Lang)
-
-
+	
 	stat, stat_error := os.fstat(fd)
 	if stat_error != os.ERROR_NONE do return
-
+	
 	if count_lines_in_dir(stat, &langs) != os.ERROR_NONE {
 		// do some error handling
 	}
+	
+	output_html(langs)
 
-
-	fmt.print("<!DOCTYPE html>")
-	fmt.print("<html>")
-	fmt.print("<body>")
-
-	for lang in langs {
-		fmt.print("<article>")
-		fmt.printf("<p>Extension \"%s\"</p>", lang.extension)
-		fmt.printf("<p>Total Size %dB</p>", lang.size)
-		fmt.printf("<p>Total Lines %d</p>", lang.lines)
-		fmt.printf("<p>Total Files %d</p>", lang.files)
-		fmt.print("</article>")
-	}
-
-	fmt.print("</body>")
-	fmt.print("</html>")
 }
 
 push_file :: proc(langsptr: ^[dynamic]Lang, extension: string, size: uint, lines: uint = 0) {
@@ -66,6 +53,8 @@ push_file :: proc(langsptr: ^[dynamic]Lang, extension: string, size: uint, lines
 	append(langsptr, Lang{extension = extension, size = size, lines = lines, files = 1})
 }
 
+NEWLINE_BYTE :: byte('\n')
+
 count_lines_in_file :: proc(fi: os.File_Info, langsptr: ^[dynamic]Lang) {
 	extension := filepath.ext(fi.fullpath)
 	if extension == "" {
@@ -80,7 +69,7 @@ count_lines_in_file :: proc(fi: os.File_Info, langsptr: ^[dynamic]Lang) {
 	lines: uint = 1
 
 	for char in data {
-		if char == byte('\n') do lines += 1
+		if char == NEWLINE_BYTE  do lines += 1
 	}
 
 	push_file(langsptr, extension, uint(fi.size), lines)
@@ -99,6 +88,10 @@ count_lines_in_dir :: proc(fi: os.File_Info, langsptr: ^[dynamic]Lang) -> os.Err
 	os.close(fd)
 
 	for fi in fis {
+		if ignore_entry(fi) {
+			continue
+		}
+
 		if fi.is_dir {
 			count_lines_in_dir(fi, langsptr)
 		} else {
