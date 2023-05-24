@@ -25,7 +25,7 @@ init_gitignore :: proc() {
 }
 
 
-@(private="file")
+@(private = "file")
 rel_offset := len(os.get_current_directory()) + 1
 
 /*
@@ -38,8 +38,14 @@ ignore_entry :: proc(fi: os.File_Info) -> bool {
 		return true
 	}
 
+	relative_file_path := fi.fullpath[rel_offset:]
+
 	for entry in gitignore_entries {
 		matched, _ := filepath.match(entry, fi.name)
+		if matched {
+			return true
+		}
+		matched, _ = filepath.match(entry, relative_file_path)
 		if matched {
 			return true
 		}
