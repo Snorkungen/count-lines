@@ -20,7 +20,6 @@ init_gitignore :: proc() {
 	if err != nil {
 		return
 	}
-
 	gitignore_entries = entries
 }
 
