@@ -3,7 +3,6 @@ package main
 import "core:fmt"
 
 output_html :: proc(langs: [dynamic]Lang) {
-
 	fmt.print("<!DOCTYPE html>")
 	fmt.print("<html>")
 	fmt.print("<body>")
@@ -19,5 +18,11 @@ output_html :: proc(langs: [dynamic]Lang) {
 
 	fmt.print("</body>")
 	fmt.print("</html>")
+}
 
+output_csv :: proc(langs: [dynamic]Lang) {
+	fmt.print("extension,total_size,total_lines,total_lines\n")
+	for lang in langs {
+		fmt.printf("%s,%d,%d,%d\n", lang.extension, lang.size, lang.lines, lang.size)
+	}
 }
