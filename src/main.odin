@@ -13,10 +13,10 @@ Lang :: struct {
 
 main :: proc() {
 	root_dir: string
-	
+
 	// root directory is current directory coz it's simple
 	root_dir = os.get_current_directory()
-	
+
 	fd, err := os.open(root_dir)
 	if err != os.ERROR_NONE {
 		fmt.eprint("Failed to open root error.")
@@ -25,16 +25,16 @@ main :: proc() {
 	defer os.close(fd)
 
 	init_gitignore()
-	
+
 	langs := make([dynamic]Lang)
-	
+
 	stat, stat_error := os.fstat(fd)
 	if stat_error != os.ERROR_NONE do return
-	
+
 	if count_lines_in_dir(stat, &langs) != os.ERROR_NONE {
 		// do some error handling
 	}
-	
+
 	output_html(langs)
 
 }
@@ -69,7 +69,7 @@ count_lines_in_file :: proc(fi: os.File_Info, langsptr: ^[dynamic]Lang) {
 	lines: uint = 1
 
 	for char in data {
-		if char == NEWLINE_BYTE  do lines += 1
+		if char == NEWLINE_BYTE do lines += 1
 	}
 
 	push_file(langsptr, extension, uint(fi.size), lines)
