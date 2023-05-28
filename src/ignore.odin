@@ -7,8 +7,8 @@ import "core:path/filepath"
 
 gitignore_entries: []string
 
-init_gitignore :: proc() {
-	gitignore_path := filepath.join([]string{os.get_current_directory(), ".gitignore"})
+init_gitignore :: proc(root_dir: string) {
+	gitignore_path := filepath.join([]string{root_dir, ".gitignore"})
 	data, success := os.read_entire_file(gitignore_path)
 
 	if !success {

@@ -24,7 +24,7 @@ main :: proc() {
 	}
 	defer os.close(fd)
 
-	init_gitignore()
+	init_gitignore(root_dir)
 
 	langs := make([dynamic]Lang)
 
@@ -35,7 +35,7 @@ main :: proc() {
 		// do some error handling
 	}
 
-	output_html(langs)
+	output_csv(langs)
 
 }
 

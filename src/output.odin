@@ -21,8 +21,8 @@ output_html :: proc(langs: [dynamic]Lang) {
 }
 
 output_csv :: proc(langs: [dynamic]Lang) {
-	fmt.print("extension,total_size,total_lines,total_lines\n")
+	fmt.print("extension,total_size,total_lines,total_files\n")
 	for lang in langs {
-		fmt.printf("%s,%d,%d,%d\n", lang.extension, lang.size, lang.lines, lang.size)
+		fmt.printf("%s,%d,%d,%d\n", lang.extension, lang.size, lang.lines, lang.files)
 	}
 }
