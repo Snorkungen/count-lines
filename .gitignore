@@ -2,3 +2,4 @@
 .build
 *.bin
 count-lines
+ols.json

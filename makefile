@@ -1,5 +1,5 @@
 
-count-lines: .build/count-lines
+count-lines:
 	mkdir .build -p
 	odin build src -out:.build/count-lines
 
