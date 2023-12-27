@@ -27,113 +27,13 @@ StateOutputType :: enum {
 }
 
 State :: struct {
+	verbose: bool
 	root_filepath:  string,
 	output_type:    StateOutputType,
 	ext_depth:      uint, // Default 1 the allowed "." in an extensinon
 	ignore_entries: [dynamic]string,
 	extensions:     [dynamic]ExtEntry,
 }
-
-initialize_state :: proc(state: ^State) -> bool {
-	state.root_filepath = os.get_current_directory()
-	state.output_type = .CSV
-	state.ext_depth = 1
-
-	// !TODO parse arguments and configure option properly
-
-	for i := 1; i < len(os.args); i += 1 {
-		arg := os.args[i]
-
-		if arg[0] == '-' {
-			switch arg {
-			case "--output-type", "-t":
-				{
-					// read next value
-					next := os.args[i + 1]
-					if next[0] == '-' {
-						continue
-					}
-
-					switch strings.to_lower(next) {
-					case "csv":
-						state.output_type = .CSV
-					case "xml":
-						{
-							state.output_type = .XML
-						}
-					}
-
-					i += 1
-				}
-			case "--ext-depth", "-d":
-				{
-					// read next value
-					next := os.args[i + 1]
-					if next[0] == '-' {
-						continue
-					}
-
-					depth := strconv.atoi(next)
-
-					if depth < 1 {
-						continue
-					}
-
-					state.ext_depth = uint(depth)
-
-					i += 1
-				}
-			case "--ignore", "-i":
-				{
-					// read next value
-					next := os.args[i + 1]
-					if next[0] == '-' {
-						continue
-					}
-
-					append(&state.ignore_entries, next)
-					i += 1
-				}
-			case "--ignore-file", "-f":
-				{
-					// read next value
-					next := os.args[i + 1]
-					if next[0] == '-' {
-						continue
-					}
-
-					// Read ignore file and the entries to the ignore list
-
-					data, success := os.read_entire_file(next)
-
-					if !success {
-						continue
-					}
-
-					entries, err := strings.split(string(data), "\n")
-
-					if err != nil {
-						continue
-					}
-
-					append(&state.ignore_entries, ..entries[:])
-					i += 1
-				}
-			}
-		}
-
-		// this is not the best but i feel that it is a  hacky solution
-		fi, err := os.stat(arg)
-		if err != os.ERROR_NONE || fi.is_dir {
-			continue
-		}
-
-		state.root_filepath = fi.fullpath
-	}
-
-	return true
-}
-
 
 main :: proc() {
 	state: State
@@ -211,6 +111,9 @@ NEWLINE_BYTE :: byte('\n')
 
 walk :: proc(state: ^State, path: string) -> os.Errno {
 	// start by walking the tree tree
+	if state.verbose {
+		fmt.printf("[INFO] reading in \"%s\"\n", path)
+	}
 
 	fd: os.Handle
 	fi: []os.File_Info
@@ -257,6 +160,10 @@ walk :: proc(state: ^State, path: string) -> os.Errno {
 
 		// // now place the FileEntry into my data structure
 		insert_file_entry(&state.extensions, file_entry, exts, 0)
+	}
+
+	if state.verbose {
+		fmt.printf("[INFO] read (%d) files\n", len(fi))
 	}
 
 	return os.ERROR_NONE
