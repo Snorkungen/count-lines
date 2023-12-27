@@ -17,7 +17,7 @@ initialize_state :: proc(state: ^State) -> bool {
 	state.ext_depth = 1
 	state.root_filepath = os.get_current_directory()
 
-	flagnames := [?]PA_FlagName {
+	flagnames := []PA_FlagName {
 		OPTION_VERBOSE,
 		OPTION_DIRECTORY,
 		OPTION_OUTPUT_TYPE,
@@ -26,7 +26,7 @@ initialize_state :: proc(state: ^State) -> bool {
 		OPTION_IGNORE_FILE,
 	}
 
-	flags := parse_args(os.args, flagnames[:])
+	flags := parse_args(os.args, flagnames)
 
 	if flags[OPTION_VERBOSE] != nil {
 		state.verbose = true
@@ -41,6 +41,10 @@ initialize_state :: proc(state: ^State) -> bool {
 			path = flag.value
 			fi, err = os.stat(path)
 			if err != os.ERROR_NONE {
+				if state.verbose {
+					fmt.printf("[WARN] could not find directory: \"%s\"\n", path)
+				}
+
 				continue
 			}
 
@@ -49,12 +53,12 @@ initialize_state :: proc(state: ^State) -> bool {
 		}
 
 		if err != os.ERROR_NONE {
-			fmt.eprintf("\"%s\": directory doesn't exist\n", path)
+			fmt.eprintf("[ERROR] could not find the specified directory: \"%s\"\n", path)
 			return false
 		}
 
 		if !fi.is_dir {
-			fmt.eprintf("\"%s\": not a directory\n", fi.fullpath)
+			fmt.eprintf("[ERROR] \"%s\": not a directory\n", fi.fullpath)
 			return false
 		}
 	}
@@ -68,6 +72,10 @@ initialize_state :: proc(state: ^State) -> bool {
 				state.output_type = .CSV;break output_type_loop
 			case "XML":
 				state.output_type = .XML;break output_type_loop
+			}
+
+			if state.verbose {
+				fmt.printf("[WARN] could not understand output type: \"%s\"\n", type)
 			}
 		}
 	}
@@ -94,6 +102,9 @@ initialize_state :: proc(state: ^State) -> bool {
 			value = flag.value
 
 			if !success {
+				if state.verbose {
+					fmt.printf("[WARN] could not read ignore file: \"%s\"\n", value)
+				}
 				continue
 			}
 
@@ -109,10 +120,12 @@ initialize_state :: proc(state: ^State) -> bool {
 		}
 
 		if (!success) {
-			fmt.eprintf("\"%s\": bad ignore file\n", value)
+			fmt.eprintf("[ERROR] failed to read ignore file: \"%s\"\n", value)
 			return false
 		}
 	}
+
+	free_flags(&flags)
 
 	return true
 }

@@ -13,13 +13,9 @@ PA_FlagValue :: struct {
 	value: string,
 }
 
+PA_Flags :: map[PA_FlagName]^PA_FlagValue
 
-parse_args :: proc(
-	args: []string,
-	flag_names: []PA_FlagName,
-) -> (
-	flags: map[PA_FlagName]^PA_FlagValue,
-) {
+parse_args :: proc(args: []string, flag_names: []PA_FlagName) -> (flags: PA_Flags) {
 	arg, name: string
 
 	for i := 1; i < len(args); i += 1 {
@@ -53,7 +49,7 @@ parse_args :: proc(
 		for j := i + 1; j < len(args); j += 1 {
 			val := args[j]
 			if val[0] == '-' || val == "" {
-				i = j -1 // THIS MIGHT CAUSE PROBLEMS
+				i = j - 1 // THIS MIGHT CAUSE PROBLEMS
 				break
 			}
 
@@ -70,4 +66,18 @@ parse_args :: proc(
 	}
 
 	return flags
+}
+
+@(private)
+free_flag :: proc(flag: ^PA_FlagValue) {
+	if flag.prev != nil {
+		free_flag(flag.prev)
+	}
+	mem.free(flag)
+}
+
+free_flags :: proc(flags: ^PA_Flags) {
+	for flag_name in flags {
+		free_flag(flags[flag_name])
+	}
 }
