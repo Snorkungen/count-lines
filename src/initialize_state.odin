@@ -5,19 +5,14 @@ import "core:os"
 import "core:strconv"
 import "core:strings"
 
-OPTION_VERBOSE := PA_FlagName{"verbose", "v"}
-OPTION_DIRECTORY := PA_FlagName{"directory", "d"}
-OPTION_OUTPUT_TYPE := PA_FlagName{"output-type", "t"}
-OPTION_EXT_DEPTH := PA_FlagName{"ext-depth", "e"}
-OPTION_IGNORE := PA_FlagName{"ignore", "i"}
-OPTION_IGNORE_FILE := PA_FlagName{"ignore-file", "f"}
+OPTION_VERBOSE :: PA_FlagName{"verbose", "v"}
+OPTION_DIRECTORY :: PA_FlagName{"directory", "d"}
+OPTION_OUTPUT_TYPE :: PA_FlagName{"output-type", "t"}
+OPTION_EXT_DEPTH :: PA_FlagName{"ext-depth", "e"}
+OPTION_IGNORE :: PA_FlagName{"ignore", "i"}
+OPTION_IGNORE_FILE :: PA_FlagName{"ignore-file", "f"}
 
-initialize_state :: proc(state: ^State) -> bool {
-	state.output_type = .CSV
-	state.ext_depth = 1
-	state.root_filepath = os.get_current_directory()
-
-	flagnames := []PA_FlagName {
+OPTION_FLAGNAMES :: []PA_FlagName {
 		OPTION_VERBOSE,
 		OPTION_DIRECTORY,
 		OPTION_OUTPUT_TYPE,
@@ -26,7 +21,15 @@ initialize_state :: proc(state: ^State) -> bool {
 		OPTION_IGNORE_FILE,
 	}
 
-	flags := parse_args(os.args, flagnames)
+initialize_state :: proc(state: ^State) -> bool {
+	state.output_type = .CSV
+	state.ext_depth = 1
+
+	flags := parse_args(os.args, OPTION_FLAGNAMES)
+	defer {
+		free_flags(&flags)
+		delete(flags)
+	}
 
 	if flags[OPTION_VERBOSE] != nil {
 		state.verbose = true
@@ -61,6 +64,8 @@ initialize_state :: proc(state: ^State) -> bool {
 			fmt.eprintf("[ERROR] \"%s\": not a directory\n", fi.fullpath)
 			return false
 		}
+	} else {
+		state.root_filepath = os.get_current_directory()
 	}
 
 	if flags[OPTION_OUTPUT_TYPE] != nil { 	// use las good value
@@ -125,7 +130,17 @@ initialize_state :: proc(state: ^State) -> bool {
 		}
 	}
 
-	free_flags(&flags)
+	if flags[PA_FLAG_UNDEFINED] != nil {
+		/*
+		Iterate through and return false due unrecognized arguments are not allowed
+		*/
+		for flag := flags[PA_FLAG_UNDEFINED]; flag != nil; flag = flag.prev {
+			fmt.eprintf("[ERROR] unrecognized argument \"%s\"\n", flag.value)
+			// !TODO: Guess what type of option the user is trying to use
+		}
+
+		return false
+	}
 
 	return true
 }

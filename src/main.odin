@@ -27,7 +27,7 @@ StateOutputType :: enum {
 }
 
 State :: struct {
-	verbose: bool
+	verbose: bool,
 	root_filepath:  string,
 	output_type:    StateOutputType,
 	ext_depth:      uint, // Default 1 the allowed "." in an extensinon
