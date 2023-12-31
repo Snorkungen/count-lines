@@ -24,6 +24,7 @@ ExtEntry :: struct {
 StateOutputType :: enum {
 	CSV,
 	XML,
+	XML_FP,
 }
 
 State :: struct {

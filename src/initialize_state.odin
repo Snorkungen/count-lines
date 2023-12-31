@@ -13,13 +13,13 @@ OPTION_IGNORE :: PA_FlagName{"ignore", "i"}
 OPTION_IGNORE_FILE :: PA_FlagName{"ignore-file", "f"}
 
 OPTION_FLAGNAMES :: []PA_FlagName {
-		OPTION_VERBOSE,
-		OPTION_DIRECTORY,
-		OPTION_OUTPUT_TYPE,
-		OPTION_EXT_DEPTH,
-		OPTION_IGNORE,
-		OPTION_IGNORE_FILE,
-	}
+	OPTION_VERBOSE,
+	OPTION_DIRECTORY,
+	OPTION_OUTPUT_TYPE,
+	OPTION_EXT_DEPTH,
+	OPTION_IGNORE,
+	OPTION_IGNORE_FILE,
+}
 
 initialize_state :: proc(state: ^State) -> bool {
 	state.output_type = .CSV
@@ -71,12 +71,13 @@ initialize_state :: proc(state: ^State) -> bool {
 	if flags[OPTION_OUTPUT_TYPE] != nil { 	// use las good value
 		output_type_loop: for flag := flags[OPTION_OUTPUT_TYPE]; flag != nil; flag = flag.prev {
 			type := flag.value
-
 			switch strings.to_upper(type) {
 			case "CSV":
 				state.output_type = .CSV;break output_type_loop
 			case "XML":
 				state.output_type = .XML;break output_type_loop
+			case "XML_FP":
+				state.output_type = .XML_FP;break output_type_loop
 			}
 
 			if state.verbose {

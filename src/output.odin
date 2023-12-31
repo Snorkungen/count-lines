@@ -22,7 +22,7 @@ compute_extension_file_entry :: proc(ext: ExtEntry) -> (file_entry: FileEntry, f
 	return file_entry, file_count
 }
 
-output_xml_elem :: proc(ext: ExtEntry) {
+output_xml_elem :: proc(ext: ExtEntry, fp: bool) {
 	fe, fcount := compute_extension_file_entry(ext)
 	fmt.printf(
 		"<Extension extension='%s' total-size='%d' total-lines='%d' total-files='%d'>\n",
@@ -34,20 +34,30 @@ output_xml_elem :: proc(ext: ExtEntry) {
 
 	// Output files
 	for f in ext.files {
-		fmt.printf("\t<File name='%s' size='%d' lines='%d' />\n", f.name, f.size, f.lines)
+		if fp {
+			fmt.printf(
+				"\t<File name='%s' fullpath='%s' size='%d' lines='%d' />\n",
+				f.name,
+				f.fullpath,
+				f.size,
+				f.lines,
+			)
+		} else {
+			fmt.printf("\t<File name='%s' size='%d' lines='%d' />\n", f.name, f.size, f.lines)
+		}
 	}
 
 	for subext in ext.extensions {
-		output_xml_elem(subext)
+		output_xml_elem(subext, fp)
 	}
 
 	fmt.print("</Extension>\n")
 }
 
-output_xml :: proc(extensions: [dynamic]ExtEntry) {
+output_xml :: proc(extensions: [dynamic]ExtEntry, fp: bool) {
 	fmt.println(`<?xml version="1.0" encoding="UTF-8"?>`)
 	fmt.println(`<CountLines>`)
-	
+
 	for ext in extensions {
 		fe, fcount := compute_extension_file_entry(ext)
 		fmt.printf(
@@ -57,16 +67,26 @@ output_xml :: proc(extensions: [dynamic]ExtEntry) {
 			fe.lines,
 			fcount,
 		)
-		
+
 		// Output files
 		for f in ext.files {
-			fmt.printf("\t<File name='%s' size='%d' lines='%d' />\n", f.name, f.size, f.lines)
+			if fp {
+				fmt.printf(
+					"\t<File name='%s' fullpath='%s' size='%d' lines='%d' />\n",
+					f.name,
+					f.fullpath,
+					f.size,
+					f.lines,
+				)
+			} else {
+				fmt.printf("\t<File name='%s' size='%d' lines='%d' />\n", f.name, f.size, f.lines)
+			}
 		}
-		
+
 		for subext in ext.extensions {
-			output_xml_elem(subext)
+			output_xml_elem(subext,fp)
 		}
-		
+
 		fmt.print("</Extension>\n")
 	}
 	fmt.println(`</CountLines>`)
@@ -99,9 +119,9 @@ output :: proc(state: State) {
 		{
 			output_csv(state.extensions);break
 		}
-	case .XML:
+	case .XML, .XML_FP:
 		{
-			output_xml(state.extensions);break
+			output_xml(state.extensions, state.output_type == .XML_FP);break
 		}
 	}
 
