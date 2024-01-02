@@ -5,12 +5,15 @@ import "core:os"
 import "core:strconv"
 import "core:strings"
 
+MAX_FILE_SIZE :: 100_000 // 100kB
+
 OPTION_VERBOSE :: PA_FlagName{"verbose", "v"}
 OPTION_DIRECTORY :: PA_FlagName{"directory", "d"}
 OPTION_OUTPUT_TYPE :: PA_FlagName{"output-type", "t"}
 OPTION_EXT_DEPTH :: PA_FlagName{"ext-depth", "e"}
 OPTION_IGNORE :: PA_FlagName{"ignore", "i"}
 OPTION_IGNORE_FILE :: PA_FlagName{"ignore-file", "f"}
+OPTION_MAX_FILE_SIZE :: PA_FlagName{"max-file-size", ""}
 
 OPTION_FLAGNAMES :: []PA_FlagName {
 	OPTION_VERBOSE,
@@ -19,11 +22,13 @@ OPTION_FLAGNAMES :: []PA_FlagName {
 	OPTION_EXT_DEPTH,
 	OPTION_IGNORE,
 	OPTION_IGNORE_FILE,
+	OPTION_MAX_FILE_SIZE,
 }
 
 initialize_state :: proc(state: ^State) -> bool {
 	state.output_type = .CSV
 	state.ext_depth = 1
+	state.max_file_size = MAX_FILE_SIZE
 
 	flags := parse_args(os.args, OPTION_FLAGNAMES)
 	defer {
@@ -128,6 +133,17 @@ initialize_state :: proc(state: ^State) -> bool {
 		if (!success) {
 			fmt.eprintf("[ERROR] failed to read ignore file: \"%s\"\n", value)
 			return false
+		}
+	}
+
+	if flags[OPTION_MAX_FILE_SIZE] != nil {
+		max_file_size: i64 // The following takes the last good value, due to LIFO
+		for flag := flags[OPTION_MAX_FILE_SIZE]; flag != nil; flag = flag.prev {
+			max_file_size = auto_cast strconv.atoi(flag.value)
+		}
+
+		if (max_file_size > 0) {
+			state.max_file_size = max_file_size
 		}
 	}
 

@@ -1,13 +1,13 @@
 # count-lines
 
-This program count the number of lines in a directory.
+This program counts the number of lines for each file-extension, in a directory.
 
 ```sh
 alias cunlines="count-lines"
 
 cunlines # counts the lines in the current directory
 cunlines --directory / # counts the lines in the root directory
-cunlines --directory ../ # counts the lines in the parent directory
+cunlines -d ../ # counts the lines in the parent directory
 
 cunlines [flags] 
 
@@ -20,4 +20,6 @@ cunlines [flags]
 
 # --ignore, -i [path, pattern,...]"Name directory or file to ignore"
 # --ignore-file, -f "A.K.A. .gitignore"
+
+# --max-file-size [file size in bytes] "file won't be read if file size exceedes the max-file-size"
 ```

@@ -28,10 +28,11 @@ StateOutputType :: enum {
 }
 
 State :: struct {
-	verbose: bool,
+	verbose:        bool,
 	root_filepath:  string,
 	output_type:    StateOutputType,
 	ext_depth:      uint, // Default 1 the allowed "." in an extensinon
+	max_file_size:  i64,
 	ignore_entries: [dynamic]string,
 	extensions:     [dynamic]ExtEntry,
 }
@@ -142,11 +143,6 @@ walk :: proc(state: ^State, path: string) -> os.Errno {
 			continue
 		}
 
-		data, success := os.read_entire_file_from_filename(info.fullpath)
-		if !success {
-			continue
-		}
-
 		file_entry := FileEntry{}
 		_, exts, count := get_file_exts(state, info.name)
 
@@ -155,8 +151,14 @@ walk :: proc(state: ^State, path: string) -> os.Errno {
 		file_entry.size = uint(info.size)
 		file_entry.lines = 1
 
-		for char in data {
-			if char == NEWLINE_BYTE do file_entry.lines += 1
+		if info.size < state.max_file_size {
+			data, success := os.read_entire_file_from_filename(info.fullpath)
+			if !success { 
+				continue // file read failed
+			}
+			for char in data {
+				if char == NEWLINE_BYTE do file_entry.lines += 1
+			}
 		}
 
 		// // now place the FileEntry into my data structure
