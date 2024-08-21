@@ -153,7 +153,7 @@ walk :: proc(state: ^State, path: string) -> os.Errno {
 
 		if info.size < state.max_file_size {
 			data, success := os.read_entire_file_from_filename(info.fullpath)
-			if !success { 
+			if !success {
 				continue // file read failed
 			}
 			for char in data {
@@ -178,16 +178,18 @@ insert_file_entry :: proc(
 	exts: []string,
 	idx: int,
 ) -> bool {
-	for ext, _ in extensions {
+	for ext, i in extensions {
 		if ext.ext != exts[idx] {
 			continue
 		}
 
 		if idx < len(exts) - 1 && exts[idx + 1] != "" {
-			return insert_file_entry(&ext.extensions, file_entry, exts, idx + 1)
+			extss := ext.extensions
+
+			return insert_file_entry(&extensions[i].extensions, file_entry, exts, idx + 1)
 		}
 
-		append(&ext.files, file_entry)
+		append(&extensions[i].files, file_entry)
 		return true
 	}
 
