@@ -25,6 +25,7 @@ StateOutputType :: enum {
 	CSV,
 	XML,
 	XML_FP,
+	JSON,
 }
 
 State :: struct {

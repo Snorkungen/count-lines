@@ -83,6 +83,8 @@ initialize_state :: proc(state: ^State) -> bool {
 				state.output_type = .XML;break output_type_loop
 			case "XML_FP":
 				state.output_type = .XML_FP;break output_type_loop
+			case "JSON":
+				state.output_type = .JSON;break output_type_loop
 			}
 
 			if state.verbose {

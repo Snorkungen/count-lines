@@ -84,7 +84,7 @@ output_xml :: proc(extensions: [dynamic]ExtEntry, fp: bool) {
 		}
 
 		for subext in ext.extensions {
-			output_xml_elem(subext,fp)
+			output_xml_elem(subext, fp)
 		}
 
 		fmt.print("</Extension>\n")
@@ -112,6 +112,73 @@ output_csv :: proc(extensions: [dynamic]ExtEntry) {
 	}
 }
 
+indent :: proc(depth: int) {
+	for i in 0 ..< depth {
+		fmt.print("\t")
+	}
+}
+output_json_ext :: proc(ext: ExtEntry, depth: int, fp: bool) {
+	fe, fcount := compute_extension_file_entry(ext)
+
+	indent(depth);fmt.printfln("\"extension\": \"%s\",", ext.ext)
+	indent(depth);fmt.printfln("\"total-size\": %d,", fe.size)
+	indent(depth);fmt.printfln("\"total-lines\": %d,", fe.lines)
+	indent(depth);fmt.printfln("\"total-files\": %d,", fcount)
+
+	if len(ext.extensions) > 0 {
+		indent(depth);fmt.println("\"extensions\": [")
+		for subext, i in ext.extensions {
+			indent(depth + 1);fmt.println("{")
+
+			output_json_ext(subext, depth + 2, fp)
+
+			if (i < len(ext.extensions) - 1) {
+				indent(depth + 1);fmt.println("},")
+			} else {
+				indent(depth + 1);fmt.println("}")
+			}
+		}
+		indent(depth);fmt.println("],")
+	}
+
+	indent(depth);fmt.println("\"files\": [")
+	for f, i in ext.files {
+		indent(depth + 1);fmt.println("{")
+
+		indent(depth + 2);fmt.printfln("\"name\": \"%s\",", f.name)
+		if fp {
+			indent(depth + 2);fmt.printfln("\"fullpath\": \"%s\",", f.fullpath)
+		}
+		indent(depth + 2);fmt.printfln("\"size\": %d,", f.size)
+		indent(depth + 2);fmt.printfln("\"lines\": %d", f.lines)
+
+		if i < len(ext.files) - 1 {
+			indent(depth + 1);fmt.println("},")
+		} else {
+			indent(depth + 1);fmt.println("}")
+		}
+	}
+	indent(depth);fmt.println("]")
+}
+output_json :: proc(extensions: [dynamic]ExtEntry) {
+	fmt.println("[")
+
+	depth := 1
+
+	for ext, i in extensions {
+		indent(depth);fmt.println("{")
+
+		output_json_ext(ext, depth + 1, false)
+
+		if (i < len(extensions) - 1) {
+			indent(depth);fmt.println("},")
+		} else {
+			indent(depth);fmt.println("}")
+		}
+	}
+
+	fmt.println("]")
+}
 
 output :: proc(state: State) {
 	switch (state.output_type) {
@@ -123,6 +190,9 @@ output :: proc(state: State) {
 		{
 			output_xml(state.extensions, state.output_type == .XML_FP);break
 		}
+	case .JSON:
+		{
+			output_json(state.extensions);break
+		}
 	}
-
 }
